@@ -26,6 +26,7 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
   }
 
   var ScreenWidth = ((BuildContext context) => MediaQuery.of(context).size.width);
+  var ScreenHeight = ((BuildContext context) => MediaQuery.of(context).size.height);
 
   String Sluzba = "Služba WC";
   String DefaultSluzba = "Služba WC";
@@ -250,20 +251,24 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
                   const SizedBox(
                     height: 10,
                   ),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 500),
+                  SizedBox(
+                    height: ScreenHeight(context),
                     child: ListView.builder(
                       itemCount: VyslednyRozvrh.length,
                       itemBuilder: (context, index) {
                         _controllers.add(TextEditingController());
 
                         return AnimationConfiguration.staggeredList(
-                            duration: const Duration(microseconds: 70000),
+                            duration: const Duration(
+                                microseconds:
+                                    160000), //TODO: make editable via slider in some settings
                             position: index,
                             child: SlideAnimation(
-                                verticalOffset: 3,
+                                verticalOffset: 5,
                                 child: ScaleAnimation(
-                                  scale: 0.95,
+                                  duration:
+                                      const Duration(microseconds: 80000), //TODO: half the variable
+                                  scale: 0.8,
                                   child: FadeInAnimation(
                                     child: Stack(
                                       alignment: Alignment.center,
