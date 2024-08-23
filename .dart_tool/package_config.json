@@ -423,7 +423,7 @@
     },
     {
       "name": "vm_service",
-      "rootUri": "file:///Users/slavo/.pub-cache/hosted/pub.dev/vm_service-14.2.4",
+      "rootUri": "file:///Users/slavo/.pub-cache/hosted/pub.dev/vm_service-14.2.5",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -452,10 +452,10 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2024-08-13T08:56:41.173725Z",
+  "generated": "2024-08-22T17:03:48.264861Z",
   "generator": "pub",
-  "generatorVersion": "3.5.0",
+  "generatorVersion": "3.5.1",
   "flutterRoot": "file:///Users/slavo/flutter",
-  "flutterVersion": "3.24.0",
+  "flutterVersion": "3.24.1",
   "pubCache": "file:///Users/slavo/.pub-cache"
 }

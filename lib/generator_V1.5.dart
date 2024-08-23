@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -37,7 +35,6 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
   List<String> VyslednyRozvrh = [];
   DateTime currentDate = DateTime.now();
   DateTime selectedDate = DateTime.now();
-  final _formKey = GlobalKey<FormState>();
   // textfield controllers
   TextEditingController SLuzobniciTcontroller = TextEditingController();
   TextEditingController NazovSluzbyTcontroller = TextEditingController();
@@ -52,6 +49,7 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
     int counterSluzobnikov = countersluzobnikovParameter;
     bool yearChanged1 = false;
     bool yearChanged2 = false;
+    Sluzobnici.sort();
     VyslednyRozvrh.clear();
     initializeDateFormatting('sk_SK', null);
     VyslednyRozvrh.add(Sluzba);
@@ -115,6 +113,7 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
   // UI
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
@@ -126,9 +125,14 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
         children: [
           if (selectedDate != currentDate)
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
-              child: FloatingActionButton(
-                child: const Icon(Icons.highlight_remove_sharp),
+              padding: const EdgeInsets.fromLTRB(0, 0, 18, 0),
+              child: FloatingActionButton.extended(
+                label: const Row(
+                  children: [
+                    Icon(Icons.clear),
+                    Text('Clear date'),
+                  ],
+                ),
                 onPressed: () async {
                   setState(() {
                     selectedDate = currentDate;
@@ -142,161 +146,157 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
             const SizedBox(
               width: 0,
             ),
-          FloatingActionButton(
+          FloatingActionButton.large(
+              foregroundColor: colorScheme.surfaceContainer,
+              backgroundColor: colorScheme.onPrimaryContainer,
               child: const Icon(Icons.calendar_month_sharp),
               onPressed: () async {
                 selectDate(context);
               }),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Center(
-          child: ListView(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextFormField(
-                            controller: NazovSluzbyTcontroller,
-                            decoration:
-                                InputDecoration(labelText: 'Názov Služby', hintText: " $Sluzba"),
-                            onChanged: (value) {
-                              Sluzba = value;
-                              if (value == "") {
-                                Sluzba = DefaultSluzba;
-                              }
-                              setState(() {
-                                hiddenGenerator(
-                                    kolkomesiacovgenerovat: kolkomesiacov,
-                                    SelectedDate: selectedDate);
-                              });
-                            }),
-                      ),
-                      if (Sluzba != DefaultSluzba)
-                        IconButton(
-                          onPressed: () {
-                            NazovSluzbyTcontroller.clear();
-                            Sluzba = DefaultSluzba;
-                            setState(() {
-                              hiddenGenerator(
-                                  kolkomesiacovgenerovat: kolkomesiacov,
-                                  SelectedDate: selectedDate);
-                            });
-                          },
-                          icon: const Icon(Icons.refresh_outlined),
-                        ),
-                    ],
-                  ),
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextFormField(
-                          controller: SLuzobniciTcontroller,
+      body: Center(
+        child: ListView(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: TextFormField(
+                          controller: NazovSluzbyTcontroller,
+                          decoration:
+                              InputDecoration(labelText: 'Názov Služby', hintText: " $Sluzba"),
                           onChanged: (value) {
-                            Sluzobnici = value.split(" ");
+                            Sluzba = value;
                             if (value == "") {
-                              Sluzobnici = DefaultSluzobnici;
+                              Sluzba = DefaultSluzba;
                             }
                             setState(() {
                               hiddenGenerator(
                                   kolkomesiacovgenerovat: kolkomesiacov,
                                   SelectedDate: selectedDate);
                             });
-                          },
-                          decoration: InputDecoration(
-                              labelText: 'Služobníci', hintText: " $HintTextSluzobnici"),
-                        ),
+                          }),
+                    ),
+                    if (Sluzba != DefaultSluzba)
+                      IconButton(
+                        onPressed: () {
+                          NazovSluzbyTcontroller.clear();
+                          Sluzba = DefaultSluzba;
+                          setState(() {
+                            hiddenGenerator(
+                                kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
+                          });
+                        },
+                        icon: const Icon(Icons.refresh_outlined),
                       ),
-                      if (Sluzobnici != DefaultSluzobnici)
-                        IconButton(
-                          onPressed: () {
-                            SLuzobniciTcontroller.clear();
+                  ],
+                ),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: TextFormField(
+                        controller: SLuzobniciTcontroller,
+                        onChanged: (value) {
+                          Sluzobnici = value.split(" ");
+                          if (value == "") {
                             Sluzobnici = DefaultSluzobnici;
-                            setState(() {
-                              hiddenGenerator(
-                                  kolkomesiacovgenerovat: kolkomesiacov,
-                                  SelectedDate: selectedDate);
-                            });
-                          },
-                          icon: const Icon(Icons.refresh_outlined),
-                        ),
-                    ],
-                  ),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300),
-                    child: Slider(
-                      value: kolkomesiacov.toDouble(),
-                      min: 1,
-                      max: 6,
-                      divisions: 5,
-                      label: '$kolkomesiacov',
-                      onChanged: (double newValue) {
-                        setState(() {
-                          kolkomesiacov = newValue.toInt();
-                        });
-                        hiddenGenerator(
-                            kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
-                      },
+                          }
+                          setState(() {
+                            hiddenGenerator(
+                                kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
+                          });
+                        },
+                        decoration: InputDecoration(
+                            labelText: 'Služobníci', hintText: " $HintTextSluzobnici"),
+                      ),
                     ),
+                    if (Sluzobnici != DefaultSluzobnici)
+                      IconButton(
+                        onPressed: () {
+                          SLuzobniciTcontroller.clear();
+                          Sluzobnici = DefaultSluzobnici;
+                          setState(() {
+                            hiddenGenerator(
+                                kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
+                          });
+                        },
+                        icon: const Icon(Icons.refresh_outlined),
+                      ),
+                  ],
+                ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Slider(
+                    value: kolkomesiacov.toDouble(),
+                    min: 1,
+                    max: 6,
+                    divisions: 5,
+                    label: '$kolkomesiacov',
+                    onChanged: (double newValue) {
+                      setState(() {
+                        kolkomesiacov = newValue.toInt();
+                      });
+                      hiddenGenerator(
+                          kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
+                    },
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  SizedBox(
-                    height: ScreenHeight(context),
-                    child: ListView.builder(
-                      itemCount: VyslednyRozvrh.length,
-                      itemBuilder: (context, index) {
-                        _controllers.add(TextEditingController());
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                SizedBox(
+                  height: ScreenHeight(context),
+                  child: ListView.builder(
+                    itemCount: VyslednyRozvrh.length,
+                    itemBuilder: (context, index) {
+                      _controllers.add(TextEditingController());
 
-                        return AnimationConfiguration.staggeredList(
-                            duration: const Duration(
-                                microseconds:
-                                    160000), //TODO: make editable via slider in some settings
-                            position: index,
-                            child: SlideAnimation(
-                                verticalOffset: 5,
-                                child: ScaleAnimation(
-                                  duration:
-                                      const Duration(microseconds: 80000), //TODO: half the variable
-                                  scale: 0.8,
-                                  child: FadeInAnimation(
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        TextField(
-                                          cursorOpacityAnimates: true,
-                                          decoration: null,
-                                          maxLength: 70,
-                                          enableInteractiveSelection: true,
-                                          controller: _controllers[index],
-                                          cursorColor: Theme.of(context).colorScheme.error,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        Text(
-                                          _controllers[index].text = VyslednyRozvrh[index],
-                                          style: TextStyle(color: Colors.transparent),
-                                        ),
-                                      ],
-                                    ),
+                      return AnimationConfiguration.staggeredList(
+                          duration: const Duration(
+                              microseconds:
+                                  160000), //TODO: make editable via slider in some settings
+                          position: index,
+                          child: SlideAnimation(
+                              verticalOffset: 5,
+                              child: ScaleAnimation(
+                                duration:
+                                    const Duration(microseconds: 80000), //TODO: half the variable
+                                scale: 0.8,
+                                child: FadeInAnimation(
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Text(
+                                        _controllers[index].text = VyslednyRozvrh[index],
+                                        style: const TextStyle(color: Color.fromARGB(0, 255, 0, 0)),
+                                      ),
+                                      TextField(
+                                        cursorOpacityAnimates: true,
+                                        decoration: null,
+                                        enableInteractiveSelection: false,
+                                        controller: _controllers[index],
+                                        cursorColor: Theme.of(context).colorScheme.error,
+                                        textAlign: TextAlign.center,
+                                        //style: TextStyle(color: Color.fromARGB(0, 255, 0, 0)),
+                                      ),
+                                    ],
                                   ),
-                                )));
-                      },
-                    ),
+                                ),
+                              )));
+                    },
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
