@@ -24,9 +24,6 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
     hiddenGenerator(kolkomesiacovgenerovat: kolkomesiacovgenerovat, SelectedDate: SelectedDate);
   }
 
-  var ScreenWidth = ((BuildContext context) => MediaQuery.of(context).size.width);
-  var ScreenHeight = ((BuildContext context) => MediaQuery.of(context).size.height);
-
   String Sluzba = "Služba WC";
   String DefaultSluzba = "Služba WC";
   List<String> Sluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
@@ -111,6 +108,7 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
         kolkomesiacov: kolkomesiacovgenerovat);
   }
 
+  final randomScrollController = ScrollController();
   // UI
   @override
   Widget build(BuildContext context) {
@@ -151,165 +149,183 @@ class _GeneratorRozvrhuState extends State<GeneratorRozvrhu> {
               }),
         ],
       ),
-      body: NestedScrollView(
-        // floatHeaderSlivers: true,
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          const SliverAppBar(
+      body: CustomScrollView(
+        controller: randomScrollController,
+        slivers: [
+          SliverAppBar(
+            pinned: false,
+            floating: true,
+            snap: true,
             centerTitle: true,
-            floating:
-                true, // I have notices more jank when scrolling through location when app bar is visible
-            // snap: true, // when using snap the app bar shows grey overlay when animating on web, didnt try on mobile
-
-            /// For the page bar to show floating when scrolling upwards, wont imppement cuz its annoying
-            title: Text('Rozvrh Služieb Generátor'),
+            title: const Text('Rozvrh Služieb Generátor'),
+            backgroundColor: colorScheme.surface,
+            surfaceTintColor: colorScheme.surface,
           ),
-        ],
-        body: Center(
-          child: ListView(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextFormField(
-                            controller: NazovSluzbyTcontroller,
-                            decoration:
-                                const InputDecoration(labelText: 'Názov Služby', hintText: " "),
+          SliverList(
+            delegate: SliverChildListDelegate(
+              [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextFormField(
+                              controller: NazovSluzbyTcontroller,
+                              decoration:
+                                  const InputDecoration(labelText: 'Názov Služby', hintText: " "),
+                              onChanged: (value) {
+                                Sluzba = value;
+                                if (value == "") {
+                                  Sluzba = DefaultSluzba;
+                                }
+                                setState(() {
+                                  hiddenGenerator(
+                                      kolkomesiacovgenerovat: kolkomesiacov,
+                                      SelectedDate: selectedDate);
+                                });
+                              }),
+                        ),
+                        if (Sluzba != DefaultSluzba)
+                          IconButton(
+                            onPressed: () {
+                              NazovSluzbyTcontroller.clear();
+                              Sluzba = DefaultSluzba;
+                              setState(() {
+                                hiddenGenerator(
+                                    kolkomesiacovgenerovat: kolkomesiacov,
+                                    SelectedDate: selectedDate);
+                              });
+                            },
+                            icon: const Icon(Icons.refresh_outlined),
+                          ),
+                      ],
+                    ),
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextFormField(
+                            controller: SLuzobniciTcontroller,
                             onChanged: (value) {
-                              Sluzba = value;
+                              Sluzobnici = value.split(" ");
                               if (value == "") {
-                                Sluzba = DefaultSluzba;
+                                Sluzobnici = DefaultSluzobnici;
                               }
                               setState(() {
                                 hiddenGenerator(
                                     kolkomesiacovgenerovat: kolkomesiacov,
                                     SelectedDate: selectedDate);
                               });
-                            }),
-                      ),
-                      if (Sluzba != DefaultSluzba)
-                        IconButton(
-                          onPressed: () {
-                            NazovSluzbyTcontroller.clear();
-                            Sluzba = DefaultSluzba;
-                            setState(() {
-                              hiddenGenerator(
-                                  kolkomesiacovgenerovat: kolkomesiacov,
-                                  SelectedDate: selectedDate);
-                            });
-                          },
-                          icon: const Icon(Icons.refresh_outlined),
+                            },
+                            decoration:
+                                const InputDecoration(labelText: 'Služobníci', hintText: " "),
+                          ),
                         ),
-                    ],
-                  ),
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextFormField(
-                          controller: SLuzobniciTcontroller,
-                          onChanged: (value) {
-                            Sluzobnici = value.split(" ");
-                            if (value == "") {
+                        if (Sluzobnici != DefaultSluzobnici)
+                          IconButton(
+                            onPressed: () {
+                              SLuzobniciTcontroller.clear();
                               Sluzobnici = DefaultSluzobnici;
-                            }
-                            setState(() {
-                              hiddenGenerator(
-                                  kolkomesiacovgenerovat: kolkomesiacov,
-                                  SelectedDate: selectedDate);
-                            });
-                          },
-                          decoration: const InputDecoration(labelText: 'Služobníci', hintText: " "),
-                        ),
-                      ),
-                      if (Sluzobnici != DefaultSluzobnici)
-                        IconButton(
-                          onPressed: () {
-                            SLuzobniciTcontroller.clear();
-                            Sluzobnici = DefaultSluzobnici;
-                            setState(() {
-                              hiddenGenerator(
-                                  kolkomesiacovgenerovat: kolkomesiacov,
-                                  SelectedDate: selectedDate);
-                            });
-                          },
-                          icon: const Icon(Icons.refresh_outlined),
-                        ),
-                    ],
-                  ),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300),
-                    child: Slider(
-                      value: kolkomesiacov.toDouble(),
-                      min: 1,
-                      max: 6,
-                      divisions: 5,
-                      label: '',
-                      onChanged: (double newValue) {
-                        setState(() {
-                          kolkomesiacov = newValue.toInt();
-                        });
-                        hiddenGenerator(
-                            kolkomesiacovgenerovat: kolkomesiacov, SelectedDate: selectedDate);
-                      },
+                              setState(() {
+                                hiddenGenerator(
+                                    kolkomesiacovgenerovat: kolkomesiacov,
+                                    SelectedDate: selectedDate);
+                              });
+                            },
+                            icon: const Icon(Icons.refresh_outlined),
+                          ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  SizedBox(
-                    height: ScreenHeight(context),
-                    child: ListView.builder(
-                      itemCount: VyslednyRozvrh.length,
-                      itemBuilder: (context, index) {
-                        _controllers.add(TextEditingController());
-                        return AnimationConfiguration.staggeredList(
-                            duration: const Duration(
-                                microseconds:
-                                    160000), //TODO: make editable via slider in some settings
-                            position: index,
-                            child: SlideAnimation(
-                                verticalOffset: 5,
-                                child: ScaleAnimation(
-                                  duration:
-                                      const Duration(microseconds: 80000), //TODO: half the variable
-                                  scale: 0.8,
-                                  child: FadeInAnimation(
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Text(
-                                          _controllers[index].text = VyslednyRozvrh[index],
-                                          style:
-                                              const TextStyle(color: Color.fromARGB(0, 255, 0, 0)),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: Column(
+                        children: [
+                          // Text('Mesiace'), //TODO: add this text
+                          Slider(
+                            value: kolkomesiacov.toDouble(),
+                            min: 1,
+                            max: 6,
+                            divisions: 5,
+                            label: kolkomesiacov.toString(),
+                            onChanged: (double newValue) {
+                              setState(() {
+                                kolkomesiacov = newValue.toInt();
+                              });
+                              hiddenGenerator(
+                                  kolkomesiacovgenerovat: kolkomesiacov,
+                                  SelectedDate: selectedDate);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      child: CustomScrollView(
+                        controller: randomScrollController,
+                        slivers: [
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              childCount: VyslednyRozvrh.length,
+                              (BuildContext context, int index) {
+                                _controllers.add(TextEditingController());
+                                return AnimationConfiguration.staggeredList(
+                                  duration: const Duration(
+                                    microseconds: 160000,
+                                  ), //TODO: make editable via slider in some settings
+                                  position: index,
+                                  child: SlideAnimation(
+                                    verticalOffset: 5,
+                                    child: ScaleAnimation(
+                                      duration: const Duration(
+                                        microseconds: 80000,
+                                      ), //TODO: half the variable
+                                      scale: 0.8,
+                                      child: FadeInAnimation(
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Text(
+                                              _controllers[index].text = VyslednyRozvrh[index],
+                                              style: const TextStyle(
+                                                color: Color.fromARGB(0, 255, 0, 0),
+                                              ),
+                                            ),
+                                            TextField(
+                                              cursorOpacityAnimates: true,
+                                              decoration: null,
+                                              enableInteractiveSelection: false,
+                                              controller: _controllers[index],
+                                              cursorColor: Theme.of(context).colorScheme.error,
+                                              textAlign: TextAlign.center,
+                                              //style: TextStyle(color: Color.fromARGB(0, 255, 0, 0)),
+                                            ),
+                                          ],
                                         ),
-                                        TextField(
-                                          cursorOpacityAnimates: true,
-                                          decoration: null,
-                                          enableInteractiveSelection: false,
-                                          controller: _controllers[index],
-                                          cursorColor: Theme.of(context).colorScheme.error,
-                                          textAlign: TextAlign.center,
-                                          //style: TextStyle(color: Color.fromARGB(0, 255, 0, 0)),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                )));
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
