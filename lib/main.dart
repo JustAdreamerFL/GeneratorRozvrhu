@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rozvrh_generator/generator_V1.5.dart';
+import 'package:rozvrh_generator/generated_ui.dart';
 
 void main() {
   runApp(const MainApp());
@@ -21,7 +21,7 @@ class MainApp extends StatelessWidget {
         colorSchemeSeed: const Color.fromARGB(255, 123, 132, 159),
         brightness: Brightness.dark,
       ),
-      home: const GeneratorRozvrhu(),
+      home: const GeneratorRozvrhu2(),
     );
   }
 }
