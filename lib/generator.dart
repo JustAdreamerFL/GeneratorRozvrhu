@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 class ScheduleGenerator {
+  final String _skipString = '--< skip >--';
   String _sluzba = "Služba WC";
   final String _defaultSluzba = "Služba WC";
   List<String> _sluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
@@ -15,20 +16,24 @@ class ScheduleGenerator {
   DateTime _selectedDate = DateTime.now();
 
   void generateScheduleFromNearestSunday({
-    required DateTime dateToGenerateFrom,
-    required int countersluzobnikovParameter,
-    required int kolkomesiacov,
+    required DateTime selectedDate,
+    required int kolkomesiacovgenerovat,
+    DateTime? skipDate,
+    String? skipString,
   }) {
-    DateTime generatorDate = dateToGenerateFrom;
-    int counterSluzobnikov = countersluzobnikovParameter;
+    skipString ??= _skipString;
+    DateTime generatorDate = selectedDate;
+    int counterSluzobnikov = _counterSluzobnikovGenerator(
+        kolkomesiacovgenerovat: kolkomesiacovgenerovat, selectedDate: _selectedDate);
     bool yearChanged1 = false;
     bool yearChanged2 = false;
+
     _sluzobnici.sort();
     _vyslednyRozvrh.clear();
     initializeDateFormatting('sk_SK', null);
     _vyslednyRozvrh.add(_sluzba);
 
-    for (int i = 0; i < kolkomesiacov; i++) {
+    for (int i = 0; i < kolkomesiacovgenerovat; i++) {
       // handling pesky year changes
       if (_selectedDate.year != generatorDate.year && yearChanged1 == false) {
         yearChanged1 = true;
@@ -44,8 +49,17 @@ class ScheduleGenerator {
       int numberOfDaysInMonth = DateTime(generatorDate.year, generatorDate.month + 1, 0).day;
       for (int day = 1; day <= numberOfDaysInMonth; day++) {
         DateTime date = DateTime(generatorDate.year, generatorDate.month, day);
-        if (date.weekday == DateTime.sunday) {
-          if (date.isAfter(DateTime.now())) {
+        if (date.weekday == DateTime.sunday && date.isAfter(DateTime.now())) {
+          if (skipDate != null) {
+            if (skipDate == date) {
+              _vyslednyRozvrh.add('${DateFormat('dd-MM').format(date)}  $skipString');
+              counterSluzobnikov++;
+            } else {
+              String sluzobnik = _sluzobnici[counterSluzobnikov % _sluzobnici.length];
+              _vyslednyRozvrh.add("${DateFormat('dd-MM').format(date)}   $sluzobnik");
+              counterSluzobnikov++;
+            }
+          } else {
             String sluzobnik = _sluzobnici[counterSluzobnikov % _sluzobnici.length];
             _vyslednyRozvrh.add("${DateFormat('dd-MM').format(date)}   $sluzobnik");
             counterSluzobnikov++;
@@ -56,7 +70,7 @@ class ScheduleGenerator {
     }
   }
 
-  void hiddenGenerator({
+  _counterSluzobnikovGenerator({
     required int kolkomesiacovgenerovat,
     required DateTime selectedDate,
   }) {
@@ -81,10 +95,7 @@ class ScheduleGenerator {
       }
       generatorDateObject = DateTime(generatorDateObject.year, generatorDateObject.month + 1);
     }
-    generateScheduleFromNearestSunday(
-        dateToGenerateFrom: selectedDate,
-        countersluzobnikovParameter: CounterSluzobnikov,
-        kolkomesiacov: kolkomesiacovgenerovat);
+    return CounterSluzobnikov;
   }
 
   List<String> get VyslednyRozvrh => _vyslednyRozvrh;

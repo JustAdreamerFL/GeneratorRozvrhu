@@ -21,7 +21,7 @@ class MainApp extends StatelessWidget {
         colorSchemeSeed: const Color.fromARGB(255, 123, 132, 159),
         brightness: Brightness.dark,
       ),
-      home: const GeneratorRozvrhu2(),
+      home: const UIGeneratorRozvrhu(),
     );
   }
 }

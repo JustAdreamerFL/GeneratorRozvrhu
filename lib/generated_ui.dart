@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'generator.dart';
 
-class GeneratorRozvrhu2 extends StatefulWidget {
-  const GeneratorRozvrhu2({super.key});
+class UIGeneratorRozvrhu extends StatefulWidget {
+  const UIGeneratorRozvrhu({super.key});
 
   @override
-  State<GeneratorRozvrhu2> createState() => _GeneratorRozvrhu2State();
+  State<UIGeneratorRozvrhu> createState() => _UIGeneratorRozvrhuState();
 }
 
-class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
+class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   final ScheduleGenerator _generator = ScheduleGenerator();
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
   final TextEditingController _sluzobniciTcontroller = TextEditingController();
@@ -19,55 +19,113 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
   final ScrollController _randomScrollController = ScrollController();
   final DateTime _currentDate = DateTime.now();
   DateTime _selectedDate = DateTime.now();
-
+  DateTime? _selectedSkipDate;
+  bool isSelectedSkip = false;
+  bool isSelectedDate = false;
   @override
   void initState() {
     super.initState();
+
     _generator.Sluzobnici = _generator.DefaultSluzobnici;
     _generator.SelectedDate = _selectedDate;
-    _generator.hiddenGenerator(
-        kolkomesiacovgenerovat: _generator.Kolkomesiacov, selectedDate: _selectedDate);
+    _generator.generateScheduleFromNearestSunday(
+        selectedDate: _selectedDate, kolkomesiacovgenerovat: _generator.Kolkomesiacov);
   }
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+
     return Scaffold(
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          if (_selectedDate != _currentDate)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 18, 0),
-              child: FloatingActionButton.extended(
-                label: const Row(
-                  children: [
-                    Icon(Icons.clear),
-                    Text('Clear date'),
-                  ],
+      floatingActionButton: Padding(
+        // fiix for weir unalignment from sides
+        padding: const EdgeInsets.fromLTRB(32, 0, 0, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_selectedSkipDate != null)
+                  FloatingActionButton.extended(
+                    label: const Row(
+                      children: [
+                        Icon(Icons.clear),
+                        Text('Clear skip'),
+                      ],
+                    ),
+                    onPressed: () async {
+                      setState(() {
+                        _selectedSkipDate = null;
+                        isSelectedSkip = !isSelectedSkip;
+                      });
+                      _generator.generateScheduleFromNearestSunday(
+                          kolkomesiacovgenerovat: _generator.Kolkomesiacov,
+                          selectedDate: _selectedDate);
+                    },
+                  )
+                else
+                  const SizedBox(),
+                const SizedBox(
+                  height: 5,
                 ),
-                onPressed: () async {
-                  setState(() {
-                    _selectedDate = _currentDate;
-                  });
-                  _generator.hiddenGenerator(
-                      kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                      selectedDate: _selectedDate);
-                },
-              ),
-            )
-          else
-            const SizedBox(
-              width: 0,
+                FloatingActionButton.small(
+                    foregroundColor: isSelectedSkip
+                        ? theme.floatingActionButtonTheme.foregroundColor
+                        : colorScheme.onPrimary,
+                    backgroundColor: isSelectedSkip
+                        ? theme.floatingActionButtonTheme.backgroundColor
+                        : colorScheme.primary,
+                    child: const Icon(Icons.calendar_month_sharp),
+                    onPressed: () async {
+                      selectSkipDate(context);
+                    }),
+              ],
             ),
-          FloatingActionButton.large(
-              foregroundColor: colorScheme.surfaceContainer,
-              backgroundColor: colorScheme.onPrimaryContainer,
-              child: const Icon(Icons.calendar_month_sharp),
-              onPressed: () async {
-                selectDate(context);
-              }),
-        ],
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_selectedDate != _currentDate)
+                  FloatingActionButton.extended(
+                    label: const Row(
+                      children: [
+                        Icon(Icons.clear),
+                        Text('Clear date'),
+                      ],
+                    ),
+                    onPressed: () async {
+                      setState(() {
+                        _selectedDate = _currentDate;
+                        isSelectedDate = !isSelectedDate;
+                      });
+                      _generator.generateScheduleFromNearestSunday(
+                          kolkomesiacovgenerovat: _generator.Kolkomesiacov,
+                          selectedDate: _selectedDate);
+                    },
+                  )
+                else
+                  const SizedBox(),
+                const SizedBox(
+                  height: 5,
+                ),
+                FloatingActionButton.small(
+                    foregroundColor: isSelectedDate
+                        ? theme.floatingActionButtonTheme.foregroundColor
+                        : colorScheme.onPrimary,
+                    backgroundColor: isSelectedDate
+                        ? theme.floatingActionButtonTheme.backgroundColor
+                        : colorScheme.primary,
+                    child: const Icon(Icons.calendar_month_sharp),
+                    onPressed: () async {
+                      selectDate(context);
+                    }),
+              ],
+            ),
+          ],
+        ),
       ),
       body: CustomScrollView(
         controller: _randomScrollController,
@@ -100,7 +158,7 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                               onChanged: (value) {
                                 _generator.Sluzba = value.isEmpty ? "" : value;
                                 setState(() {
-                                  _generator.hiddenGenerator(
+                                  _generator.generateScheduleFromNearestSunday(
                                       kolkomesiacovgenerovat: _generator.Kolkomesiacov,
                                       selectedDate: _selectedDate);
                                 });
@@ -112,7 +170,7 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                               _nazovSluzbyTcontroller.clear();
                               _generator.Sluzba = _generator.defaultSluzba;
                               setState(() {
-                                _generator.hiddenGenerator(
+                                _generator.generateScheduleFromNearestSunday(
                                     kolkomesiacovgenerovat: _generator.Kolkomesiacov,
                                     selectedDate: _selectedDate);
                               });
@@ -136,7 +194,7 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                               }
                               setState(() {
                                 _generator.Sluzobnici = sluzobnici.isEmpty ? [] : sluzobnici;
-                                _generator.hiddenGenerator(
+                                _generator.generateScheduleFromNearestSunday(
                                     kolkomesiacovgenerovat: _generator.Kolkomesiacov,
                                     selectedDate: _selectedDate);
                               });
@@ -151,7 +209,7 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                               _sluzobniciTcontroller.clear();
                               _generator.Sluzobnici = _generator.DefaultSluzobnici;
                               setState(() {
-                                _generator.hiddenGenerator(
+                                _generator.generateScheduleFromNearestSunday(
                                     kolkomesiacovgenerovat: _generator.Kolkomesiacov,
                                     selectedDate: _selectedDate);
                               });
@@ -164,7 +222,8 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                       constraints: const BoxConstraints(maxWidth: 300),
                       child: Column(
                         children: [
-                          // Text('Mesiace'), //TODO: add this text
+                          const SizedBox(height: 15),
+                          const Text('Mesiace', style: null),
                           Slider(
                             value: _generator.Kolkomesiacov.toDouble(),
                             min: 1,
@@ -175,7 +234,7 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
                               setState(() {
                                 _generator.Kolkomesiacov = newValue.toInt();
                               });
-                              _generator.hiddenGenerator(
+                              _generator.generateScheduleFromNearestSunday(
                                   kolkomesiacovgenerovat: _generator.Kolkomesiacov,
                                   selectedDate: _selectedDate);
                             },
@@ -259,9 +318,46 @@ class _GeneratorRozvrhu2State extends State<GeneratorRozvrhu2> {
       helpText: 'Date for schedule',
     );
     if (picked != null) {
-      setState(() => _selectedDate = picked);
-      _generator.hiddenGenerator(
-          kolkomesiacovgenerovat: _generator.Kolkomesiacov, selectedDate: _selectedDate);
+      setState(() {
+        _selectedDate = picked;
+        if (isSelectedDate != true) {
+          isSelectedDate = !isSelectedDate;
+        }
+      });
+      _generator.generateScheduleFromNearestSunday(
+          kolkomesiacovgenerovat: _generator.Kolkomesiacov,
+          selectedDate: _selectedDate,
+          skipDate: _selectedSkipDate);
+    }
+  }
+
+  Future<void> selectSkipDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      selectableDayPredicate: (day) {
+        if (day.weekday == DateTime.sunday) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      currentDate: _selectedSkipDate,
+      firstDate: _currentDate,
+      lastDate: _currentDate.add(const Duration(days: 365 * 10)),
+      helpText: 'Skip this date',
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedSkipDate = picked;
+        if (isSelectedSkip != true) {
+          isSelectedSkip = !isSelectedSkip;
+        }
+      });
+      _generator.generateScheduleFromNearestSunday(
+        kolkomesiacovgenerovat: _generator.Kolkomesiacov,
+        selectedDate: _selectedDate,
+        skipDate: picked,
+      );
     }
   }
 }
