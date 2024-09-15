@@ -1,5 +1,5 @@
 // generator_ui.dart
-
+// TODO: make a settings dashpanel in which there would be various more advanced tools or sm
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'generator.dart';
@@ -236,7 +236,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                               });
                               _generator.generateScheduleFromNearestSunday(
                                   kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                                  selectedDate: _selectedDate);
+                                  selectedDate: _selectedDate,
+                                  skipDate: _selectedSkipDate);
                             },
                           ),
                         ],

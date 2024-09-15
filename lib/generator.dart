@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 class ScheduleGenerator {
-  final String _skipString = '--< skip >--';
+  final String _skipString = '🚨--< skip >--🚨';
   String _sluzba = "Služba WC";
   final String _defaultSluzba = "Služba WC";
   List<String> _sluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
