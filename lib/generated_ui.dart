@@ -1,12 +1,10 @@
-// generator_ui.dart
-// TODO: make a settings dashpanel in which there would be various more advanced tools or sm
+// TODO: ak v current mesiaci nie je už ďaľšia nedela, skipni ten mesiac ale nech to vygeneruje stále korektný počet zvolených mesiacov
+//TODO: jednotlive chips pre meno sluzobnika, a dva tlacidla pre oznacenie kazdeho a odoznacenie kazdeho, schovane v modal sheet
 
-//TODO: focus node sposobilo že sa vobec nefocusne
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'generator.dart';
+import 'generator_logic.dart';
 
 class UIGeneratorRozvrhu extends StatefulWidget {
   const UIGeneratorRozvrhu({super.key});
@@ -16,7 +14,6 @@ class UIGeneratorRozvrhu extends StatefulWidget {
 }
 
 class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
-  FocusNode _focusNode = FocusNode();
   final ScheduleGenerator _generator = ScheduleGenerator();
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
   final TextEditingController _sluzobniciTcontroller = TextEditingController();
@@ -132,7 +129,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           ),
         ),
         TextField(
-          focusNode: _focusNode,
           cursorOpacityAnimates: true,
           decoration: null,
           enableInteractiveSelection: false,
@@ -180,7 +176,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 300),
           child: TextFormField(
-            focusNode: _focusNode,
             controller: _sluzobniciTcontroller,
             onChanged: (value) {
               List<String> sluzobnici = value.split(" ").map((e) => e.trim()).toList();
@@ -219,7 +214,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 300),
           child: TextFormField(
-              focusNode: _focusNode,
               controller: _nazovSluzbyTcontroller,
               decoration: const InputDecoration(labelText: 'Názov Služby', hintText: " "),
               onChanged: (value) {
@@ -231,7 +225,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                 });
               }),
         ),
-        if (_generator.Sluzba != "Služba WC")
+        if (_generator.Sluzba != "Služba mužské WC")
           IconButton(
             onPressed: () {
               _nazovSluzbyTcontroller.clear();

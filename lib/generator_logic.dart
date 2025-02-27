@@ -1,19 +1,19 @@
 // generator_logic.dart
 
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, unnecessary_getters_setters
 
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 class ScheduleGenerator {
   final String _skipString = '🚨--< skip >--🚨';
-  String _sluzba = "Služba WC";
-  final String _defaultSluzba = "Služba WC";
+  String _sluzba = "Služba mužské WC";
+  final String _defaultSluzba = "Služba mužské WC";
   List<String> _sluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
   final List<String> _defaultSluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
   int _kolkomesiacov = 3;
   final List<String> _vyslednyRozvrh = [];
-  DateTime _selectedDate = DateTime.now();
+  DateTime _referenceDate = DateTime.now();
 
   Future<void> generateScheduleFromNearestSunday({
     required DateTime selectedDate,
@@ -24,29 +24,43 @@ class ScheduleGenerator {
     skipString ??= _skipString;
     DateTime generatorDate = selectedDate;
     int counterSluzobnikov = _counterSluzobnikovGenerator(
-        kolkomesiacovgenerovat: kolkomesiacovgenerovat, selectedDate: _selectedDate);
+        kolkomesiacovgenerovat: kolkomesiacovgenerovat, selectedDate: _referenceDate);
     bool yearChanged1 = false;
-    bool yearChanged2 = false;
+    // bool yearChanged2 = false;
 
     _sluzobnici.sort();
     _vyslednyRozvrh.clear();
     initializeDateFormatting('sk_SK', null);
     _vyslednyRozvrh.add(_sluzba);
 
+    //  based on if current month does not have any more coming sundays
+    // first, check if there are any sundays after today in the current month
+    kolkomesiacovgenerovat = checkAndActOnIfCurrentMonthHasNextSundays(kolkomesiacovgenerovat);
+
     for (int i = 0; i < kolkomesiacovgenerovat; i++) {
+      int numberOfDaysInMonth = DateTime(generatorDate.year, generatorDate.month + 1, 0).day;
+
       // handling pesky year changes
-      if (_selectedDate.year != generatorDate.year && yearChanged1 == false) {
+      if (_referenceDate.year != generatorDate.year && yearChanged1 == false) {
         yearChanged1 = true;
         _vyslednyRozvrh.add('----  ${DateFormat('yyyy', 'sk').format(generatorDate)} ----');
       }
-      // handling absolutely not critical year change scenario lol
-      if (_selectedDate.year != DateTime.now().year && yearChanged2 == false) {
-        yearChanged2 = true;
-        _vyslednyRozvrh.add('----  ${DateFormat('yyyy', 'sk').format(generatorDate)} ----');
-      }
-      _vyslednyRozvrh.add("----  ${DateFormat('MMMM', 'sk').format(generatorDate)} ----");
+      // // handling absolutely not going to happen second year change scenario lol
+      // if (_referenceDate.year != DateTime.now().year && yearChanged2 == false) {
+      //   yearChanged2 = true;
+      //   _vyslednyRozvrh.add('----  ${DateFormat('yyyy', 'sk').format(generatorDate)} ----');
+      // }
 
-      int numberOfDaysInMonth = DateTime(generatorDate.year, generatorDate.month + 1, 0).day;
+      // check if current month have any next sundays, if not, do not display current month string
+      // this is only helping in generating without custom date
+      for (int day = 1; day <= numberOfDaysInMonth; day++) {
+        DateTime checkDateObject = DateTime(_referenceDate.year, _referenceDate.month, day);
+        if (checkDateObject.weekday == DateTime.sunday && checkDateObject.isAfter(DateTime.now())) {
+          _vyslednyRozvrh.add("----  ${DateFormat('MMMM', 'sk').format(generatorDate)} ----");
+          break;
+        }
+      }
+
       for (int day = 1; day <= numberOfDaysInMonth; day++) {
         DateTime date = DateTime(generatorDate.year, generatorDate.month, day);
         if (date.weekday == DateTime.sunday && date.isAfter(DateTime.now())) {
@@ -68,6 +82,25 @@ class ScheduleGenerator {
       }
       generatorDate = DateTime(generatorDate.year, generatorDate.month + 1);
     }
+  }
+
+  int checkAndActOnIfCurrentMonthHasNextSundays(int kolkomesiacovgenerovat) {
+    bool hasFutureSundays = false;
+    int referenceNumberOfDays = DateTime(_referenceDate.year, _referenceDate.month + 1, 0).day;
+
+    for (int day = 1; day <= referenceNumberOfDays; day++) {
+      DateTime referenceDateObject = DateTime(_referenceDate.year, _referenceDate.month, day);
+      if (referenceDateObject.weekday == DateTime.sunday &&
+          referenceDateObject.isAfter(DateTime.now())) {
+        hasFutureSundays = true;
+        break;
+      }
+    }
+    // socendly, only increment if there are no future Sundays
+    if (!hasFutureSundays) {
+      kolkomesiacovgenerovat += 1;
+    }
+    return kolkomesiacovgenerovat;
   }
 
   _counterSluzobnikovGenerator({
@@ -122,6 +155,6 @@ class ScheduleGenerator {
   }
 
   set SelectedDate(DateTime value) {
-    _selectedDate = value;
+    _referenceDate = value;
   }
 }
