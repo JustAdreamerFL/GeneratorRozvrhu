@@ -13,11 +13,13 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       themeMode: ThemeMode.system, // Use system theme
       theme: ThemeData(
+        sliderTheme: const SliderThemeData(year2023: false),
         colorSchemeSeed: const Color.fromARGB(255, 123, 132, 159),
         brightness: Brightness.light,
       ),
 
       darkTheme: ThemeData(
+        sliderTheme: const SliderThemeData(year2023: false),
         colorSchemeSeed: const Color.fromARGB(255, 123, 132, 159),
         brightness: Brightness.dark,
       ),

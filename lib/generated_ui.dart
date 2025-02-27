@@ -151,8 +151,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           Slider(
             value: _generator.Kolkomesiacov.toDouble(),
             min: 1,
-            max: 6,
-            divisions: 5,
+            max: 5,
+            divisions: 4,
             label: '${_generator.Kolkomesiacov}',
             onChanged: (double newValue) {
               setState(() {
