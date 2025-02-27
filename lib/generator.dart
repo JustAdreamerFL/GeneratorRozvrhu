@@ -15,12 +15,12 @@ class ScheduleGenerator {
   final List<String> _vyslednyRozvrh = [];
   DateTime _selectedDate = DateTime.now();
 
-  void generateScheduleFromNearestSunday({
+  Future<void> generateScheduleFromNearestSunday({
     required DateTime selectedDate,
     required int kolkomesiacovgenerovat,
     DateTime? skipDate,
     String? skipString,
-  }) {
+  }) async {
     skipString ??= _skipString;
     DateTime generatorDate = selectedDate;
     int counterSluzobnikov = _counterSluzobnikovGenerator(
