@@ -336,7 +336,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
       currentDate: _selectedDate,
       firstDate: _currentDate,
       lastDate: _currentDate.add(const Duration(days: 365 * 10)),
-      helpText: 'Date for schedule',
+      helpText: 'Vyber dátum, od ktorého sa bude generovať rozvrh',
     );
     if (picked != null) {
       setState(() {
@@ -365,7 +365,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
       currentDate: _selectedSkipDate,
       firstDate: _currentDate,
       lastDate: _currentDate.add(const Duration(days: 365 * 10)),
-      helpText: 'Skip this date',
+      helpText: 'Vyber týždeň ktorý bude v generovaní preskočený',
     );
     if (picked != null) {
       setState(() {
