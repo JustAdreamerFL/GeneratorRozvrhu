@@ -25,7 +25,7 @@ jobs:
         run: flutter config --enable-web
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --wasm
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
