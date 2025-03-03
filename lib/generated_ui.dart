@@ -15,7 +15,7 @@ class UIGeneratorRozvrhu extends StatefulWidget {
 
 class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
-  final TextEditingController _sluzobniciTcontroller = TextEditingController();
+  // final TextEditingController _sluzobniciTcontroller = TextEditingController();
   final List<TextEditingController> _controllers = [];
   final ScrollController _randomScrollController = ScrollController();
   final DateTime currentDate = DateTime.now();
@@ -25,6 +25,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   bool isSelectedDate = false;
   List<String> defaultSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
   List<String> selectedSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  List<String> emptyRozvrh = ["Pridaj dakoho, inak bude zle."];
 
   String defaultSluzba = "Služba mužské WC";
   String sluzba = "Služba mužské WC";
@@ -126,7 +127,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                   setState(() {});
                   if (selectedSluzobniciList.isEmpty) {
                     selectedSluzobniciList = ["empty"];
-                    vyslednyRozvrh = ["Pridaj dakoho, inak bude zle."];
+                    vyslednyRozvrh = emptyRozvrh;
                     selectedSluzobniciList = [];
                     setState(() {});
                   } else {
@@ -162,15 +163,54 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             children: sluzobniciChipWidgetsList,
           ),
           Center(
-            child: Column(
-              children: [
-                Row(
-                  children: selectedSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
-                ),
-                Row(
-                  children: defaultSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 8,
+                    children: [
+                      ActionChip(
+                        label: Text("Odznač všetkých"),
+                        onPressed: () async {
+                          selectedSluzobniciList = [];
+                          vyslednyRozvrh = emptyRozvrh;
+                          setState(() {});
+                        },
+                      ),
+                      ActionChip(
+                        label: Text("Označ všetkých"),
+                        onPressed: () async {
+                          selectedSluzobniciList = [...defaultSluzobniciList];
+                          vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                              sluzba: sluzba,
+                              sluzobnici: selectedSluzobniciList,
+                              kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                              selectedDate: selectedDate);
+                          setState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                  // Column(
+                  //   children: [
+                  //     Text("selected"),
+                  //     Row(
+                  //       children: selectedSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
+                  //     ),
+                  //   ],
+                  // ),
+                  // Column(
+                  //   children: [
+                  //     Text("default"),
+                  //     Row(
+                  //       children: defaultSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
+                  //     ),
+                  //   ],
+                  // ),
+                ],
+              ),
             ),
           ),
         ],
@@ -263,12 +303,16 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             label: '$kolkomesiacovgenerovat',
             onChanged: (double newValue) async {
               kolkomesiacovgenerovat = newValue.toInt();
-              vyslednyRozvrh = await generateScheduleFromNearestSunday(
-                  sluzba: sluzba,
-                  sluzobnici: selectedSluzobniciList,
-                  selectedDate: selectedDate,
-                  kolkomesiacovgenerovat: kolkomesiacovgenerovat,
-                  skipDate: selectedSkipDate);
+              if (selectedSluzobniciList.isEmpty) {
+                vyslednyRozvrh = emptyRozvrh;
+              } else {
+                vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                    sluzba: sluzba,
+                    sluzobnici: selectedSluzobniciList,
+                    selectedDate: selectedDate,
+                    kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                    skipDate: selectedSkipDate);
+              }
               setState(() {});
             },
           ),

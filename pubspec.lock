@@ -573,14 +573,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  wrapbuilder:
-    dependency: "direct main"
-    description:
-      name: wrapbuilder
-      sha256: "807a3c4200d9e8d7c99f87b3d2e3d6add4b53bde8e5fac8b2be0e1062bba23d2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.1"
   xml:
     dependency: transitive
     description:
