@@ -38,6 +38,7 @@ dependencies:
   intl: ^0.20.2
   riverpod: ^2.6.1
   riverpod_lint: ^2.6.4
+  wrapbuilder: ^0.0.1
 
   # flutter clean && flutter pub get && dart run flutter_native_splash:create
 flutter_native_splash:

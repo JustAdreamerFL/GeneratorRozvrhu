@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'generator_logic.dart';
+import 'generator_function.dart';
 
 class UIGeneratorRozvrhu extends StatefulWidget {
   const UIGeneratorRozvrhu({super.key});
@@ -14,23 +14,38 @@ class UIGeneratorRozvrhu extends StatefulWidget {
 }
 
 class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
-  final ScheduleGenerator _generator = ScheduleGenerator();
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
   final TextEditingController _sluzobniciTcontroller = TextEditingController();
   final List<TextEditingController> _controllers = [];
   final ScrollController _randomScrollController = ScrollController();
-  final DateTime _currentDate = DateTime.now();
-  DateTime _selectedDate = DateTime.now();
-  DateTime? _selectedSkipDate;
+  final DateTime currentDate = DateTime.now();
+  DateTime selectedDate = DateTime.now();
+  DateTime? selectedSkipDate;
   bool isSelectedSkip = false;
   bool isSelectedDate = false;
+  List<String> defaultSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  List<String> selectedSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+
+  String defaultSluzba = "Služba mužské WC";
+  String sluzba = "Služba mužské WC";
+  int kolkomesiacovgenerovat = 3;
+  List<String> vyslednyRozvrh = [];
+
   @override
   void initState() {
-    _generator.Sluzobnici = _generator.DefaultSluzobnici;
-    _generator.SelectedDate = _selectedDate;
-    unawaited(_generator.generateScheduleFromNearestSunday(
-        selectedDate: _selectedDate, kolkomesiacovgenerovat: _generator.Kolkomesiacov));
+    _initializeSchedule();
+    // selectedSluzobniciList = defaultSluzobniciList;
     super.initState();
+  }
+
+  _initializeSchedule() async {
+    vyslednyRozvrh = await generateScheduleFromNearestSunday(
+        sluzba: sluzba,
+        sluzobnici: selectedSluzobniciList,
+        kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+        selectedDate: selectedDate);
+
+    setState(() {});
   }
 
   @override
@@ -63,9 +78,12 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     nazov_textfield(),
-                    sluzobnici_textfield(),
+                    // sluzobnici_textfield(),
+                    const SizedBox(height: 10),
+                    sluzobnici_chipfield(),
                     mesiace_slider(),
                     const SizedBox(height: 10),
                     generated_text(context)
@@ -79,6 +97,95 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     );
   }
 
+  // sluzobnici_chipfield() {
+  //   var itemCount = 20;
+  //   return Padding(
+  //     padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+  //     child: WrapBuilder(
+  //         wrapAlignment: WrapAlignment.center,
+  //         runAlignment: WrapAlignment.center,
+  //         itemBuilder: (BuildContext context, ) {
+  //           // return Chip(label: Text("data"));
+  //           return Chip(label: Text("{$sluzobnicic}"));
+  //         },
+  //         itemCount: itemCount,
+  //         reversed: false),
+  //   );
+  // }
+  sluzobnici_chipfield() {
+    List<Widget> sluzobniciChipWidgetsList = defaultSluzobniciList
+        .asMap()
+        .map((index, meno) => MapEntry(
+            index,
+            InputChip(
+              isEnabled: true,
+              selected: selectedSluzobniciList.contains(meno),
+              onSelected: (_) async {
+                if (selectedSluzobniciList.contains(meno)) {
+                  selectedSluzobniciList.remove(meno);
+                  setState(() {});
+                  if (selectedSluzobniciList.isEmpty) {
+                    selectedSluzobniciList = ["empty"];
+                    vyslednyRozvrh = ["Pridaj dakoho, inak bude zle."];
+                    selectedSluzobniciList = [];
+                    setState(() {});
+                  } else {
+                    vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                        sluzba: sluzba,
+                        sluzobnici: selectedSluzobniciList,
+                        selectedDate: selectedDate,
+                        kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                    setState(() {});
+                  }
+                } else {
+                  selectedSluzobniciList.add(meno);
+                  vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                      sluzba: sluzba,
+                      sluzobnici: selectedSluzobniciList,
+                      selectedDate: selectedDate,
+                      kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                  setState(() {});
+                }
+              },
+              label: Text(meno),
+            )))
+        .values
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+      child: Column(
+        children: [
+          Wrap(
+            alignment: WrapAlignment.center,
+            runAlignment: WrapAlignment.center,
+            children: sluzobniciChipWidgetsList,
+          ),
+          Center(
+            child: Column(
+              children: [
+                Row(
+                  children: selectedSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
+                ),
+                Row(
+                  children: defaultSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    // return Padding(
+    //   padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+    //   child: Wrap(
+    //     alignment: WrapAlignment.center,
+    //     runAlignment: WrapAlignment.center,
+    //     children: sluzobniciChipWidgetsList,
+    //   ),
+    // );
+  }
+
   SizedBox generated_text(BuildContext context) {
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -87,7 +194,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
         slivers: [
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              childCount: _generator.VyslednyRozvrh.length,
+              childCount: vyslednyRozvrh.length,
               (BuildContext context, int index) {
                 _controllers.add(TextEditingController());
                 return AnimationConfiguration.staggeredList(
@@ -123,7 +230,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     return Stack(
       children: [
         Text(
-          _controllers[index].text = _generator.VyslednyRozvrh[index],
+          _controllers[index].text = vyslednyRozvrh[index],
           style: const TextStyle(
             color: Color.fromARGB(0, 255, 0, 0),
           ),
@@ -149,19 +256,20 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           const SizedBox(height: 15),
           const Text('Mesiace', style: null),
           Slider(
-            value: _generator.Kolkomesiacov.toDouble(),
+            value: kolkomesiacovgenerovat.toDouble(),
             min: 1,
             max: 5,
             divisions: 4,
-            label: '${_generator.Kolkomesiacov}',
-            onChanged: (double newValue) {
-              setState(() {
-                _generator.Kolkomesiacov = newValue.toInt();
-              });
-              _generator.generateScheduleFromNearestSunday(
-                  kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                  selectedDate: _selectedDate,
-                  skipDate: _selectedSkipDate);
+            label: '$kolkomesiacovgenerovat',
+            onChanged: (double newValue) async {
+              kolkomesiacovgenerovat = newValue.toInt();
+              vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                  sluzba: sluzba,
+                  sluzobnici: selectedSluzobniciList,
+                  selectedDate: selectedDate,
+                  kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                  skipDate: selectedSkipDate);
+              setState(() {});
             },
           ),
         ],
@@ -169,43 +277,50 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     );
   }
 
-  Stack sluzobnici_textfield() {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300),
-          child: TextFormField(
-            controller: _sluzobniciTcontroller,
-            onChanged: (value) {
-              List<String> sluzobnici = value.split(" ").map((e) => e.trim()).toList();
-              if (value.isEmpty) {
-                sluzobnici = [];
-              }
-              setState(() {
-                _generator.Sluzobnici = sluzobnici.isEmpty ? [] : sluzobnici;
-                _generator.generateScheduleFromNearestSunday(
-                    kolkomesiacovgenerovat: _generator.Kolkomesiacov, selectedDate: _selectedDate);
-              });
-            },
-            decoration: const InputDecoration(labelText: 'Služobníci', hintText: " "),
-          ),
-        ),
-        if (_generator.Sluzobnici != _generator.DefaultSluzobnici)
-          IconButton(
-            onPressed: () {
-              _sluzobniciTcontroller.clear();
-              _generator.Sluzobnici = _generator.DefaultSluzobnici;
-              setState(() {
-                _generator.generateScheduleFromNearestSunday(
-                    kolkomesiacovgenerovat: _generator.Kolkomesiacov, selectedDate: _selectedDate);
-              });
-            },
-            icon: const Icon(Icons.refresh_outlined),
-          ),
-      ],
-    );
-  }
+  // Stack sluzobnici_textfield() {
+  //   return Stack(
+  //     alignment: Alignment.bottomRight,
+  //     children: [
+  //       ConstrainedBox(
+  //         constraints: const BoxConstraints(maxWidth: 300),
+  //         child: TextFormField(
+  //           controller: _sluzobniciTcontroller,
+  //           onChanged: (value) async {
+  //             if (value.isEmpty) {
+  //               vyslednyRozvrh = ["Pridaj dakoho, inak bude zle."];
+
+  //               setState(() {});
+  //             } else {
+  //               selectedSluzobniciList = value.split(" ").map((e) => e.trim()).toList();
+  //               vyslednyRozvrh = await generateScheduleFromNearestSunday(
+  //                   sluzba: sluzba,
+  //                   sluzobnici: selectedSluzobniciList,
+  //                   selectedDate: selectedDate,
+  //                   kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+  //               setState(() {});
+  //             }
+  //           },
+  //           decoration: const InputDecoration(labelText: 'Služobníci', hintText: " "),
+  //         ),
+  //       ),
+  //       if (selectedSluzobniciList != defaultSluzobniciList)
+  //         IconButton(
+  //           onPressed: () async {
+  //             _sluzobniciTcontroller.clear();
+  //             selectedSluzobniciList = defaultSluzobniciList;
+
+  //             vyslednyRozvrh = await generateScheduleFromNearestSunday(
+  //                 sluzba: sluzba,
+  //                 sluzobnici: selectedSluzobniciList,
+  //                 selectedDate: selectedDate,
+  //                 kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+  //             setState(() {});
+  //           },
+  //           icon: const Icon(Icons.refresh_outlined),
+  //         ),
+  //     ],
+  //   );
+  // }
 
   Stack nazov_textfield() {
     return Stack(
@@ -216,24 +331,29 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           child: TextFormField(
               controller: _nazovSluzbyTcontroller,
               decoration: const InputDecoration(labelText: 'Názov Služby', hintText: " "),
-              onChanged: (value) {
-                _generator.Sluzba = value.isEmpty ? "" : value;
-                setState(() {
-                  _generator.generateScheduleFromNearestSunday(
-                      kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                      selectedDate: _selectedDate);
-                });
+              onChanged: (value) async {
+                sluzba = value.isEmpty ? "" : value;
+
+                vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                    sluzba: sluzba,
+                    sluzobnici: selectedSluzobniciList,
+                    selectedDate: selectedDate,
+                    kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                setState(() {});
               }),
         ),
-        if (_generator.Sluzba != "Služba mužské WC")
+        if (sluzba != "Služba mužské WC")
           IconButton(
-            onPressed: () {
+            onPressed: () async {
               _nazovSluzbyTcontroller.clear();
-              _generator.Sluzba = _generator.defaultSluzba;
-              setState(() {
-                _generator.generateScheduleFromNearestSunday(
-                    kolkomesiacovgenerovat: _generator.Kolkomesiacov, selectedDate: _selectedDate);
-              });
+              sluzba = defaultSluzba;
+
+              vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                  sluzba: sluzba,
+                  sluzobnici: selectedSluzobniciList,
+                  selectedDate: selectedDate,
+                  kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+              setState(() {});
             },
             icon: const Icon(Icons.refresh_outlined),
           ),
@@ -250,7 +370,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (_selectedSkipDate != null)
+            if (selectedSkipDate != null)
               FloatingActionButton.extended(
                 label: const Row(
                   children: [
@@ -259,13 +379,15 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                   ],
                 ),
                 onPressed: () async {
-                  setState(() {
-                    _selectedSkipDate = null;
-                    isSelectedSkip = !isSelectedSkip;
-                  });
-                  _generator.generateScheduleFromNearestSunday(
-                      kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                      selectedDate: _selectedDate);
+                  selectedSkipDate = null;
+                  isSelectedSkip = !isSelectedSkip;
+
+                  vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                      sluzba: sluzba,
+                      sluzobnici: selectedSluzobniciList,
+                      selectedDate: selectedDate,
+                      kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                  setState(() {});
                 },
               )
             else
@@ -290,7 +412,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (_selectedDate != _currentDate)
+            if (selectedDate != currentDate)
               FloatingActionButton.extended(
                 label: const Row(
                   children: [
@@ -299,13 +421,15 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                   ],
                 ),
                 onPressed: () async {
-                  setState(() {
-                    _selectedDate = _currentDate;
-                    isSelectedDate = !isSelectedDate;
-                  });
-                  _generator.generateScheduleFromNearestSunday(
-                      kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-                      selectedDate: _selectedDate);
+                  selectedDate = currentDate;
+                  isSelectedDate = !isSelectedDate;
+
+                  vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                      sluzba: sluzba,
+                      sluzobnici: selectedSluzobniciList,
+                      selectedDate: selectedDate,
+                      kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                  setState(() {});
                 },
               )
             else
@@ -333,22 +457,24 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   Future<void> selectDateDialog(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      currentDate: _selectedDate,
-      firstDate: _currentDate,
-      lastDate: _currentDate.add(const Duration(days: 365 * 10)),
+      currentDate: selectedDate,
+      firstDate: currentDate,
+      lastDate: currentDate.add(const Duration(days: 365 * 10)),
       helpText: 'Date for schedule',
     );
     if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        if (isSelectedDate != true) {
-          isSelectedDate = !isSelectedDate;
-        }
-      });
-      _generator.generateScheduleFromNearestSunday(
-          kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-          selectedDate: _selectedDate,
-          skipDate: _selectedSkipDate);
+      selectedDate = picked;
+      if (isSelectedDate != true) {
+        isSelectedDate = !isSelectedDate;
+      }
+
+      vyslednyRozvrh = await generateScheduleFromNearestSunday(
+          sluzba: sluzba,
+          sluzobnici: selectedSluzobniciList,
+          selectedDate: selectedDate,
+          kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+          skipDate: selectedSkipDate);
+      setState(() {});
     }
   }
 
@@ -362,23 +488,23 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
           return false;
         }
       },
-      currentDate: _selectedSkipDate,
-      firstDate: _currentDate,
-      lastDate: _currentDate.add(const Duration(days: 365 * 10)),
+      currentDate: selectedSkipDate,
+      firstDate: currentDate,
+      lastDate: currentDate.add(const Duration(days: 365 * 10)),
       helpText: 'Skip this date',
     );
     if (picked != null) {
-      setState(() {
-        _selectedSkipDate = picked;
-        if (isSelectedSkip != true) {
-          isSelectedSkip = !isSelectedSkip;
-        }
-      });
-      _generator.generateScheduleFromNearestSunday(
-        kolkomesiacovgenerovat: _generator.Kolkomesiacov,
-        selectedDate: _selectedDate,
-        skipDate: picked,
-      );
+      selectedSkipDate = picked;
+      if (isSelectedSkip != true) {
+        isSelectedSkip = !isSelectedSkip;
+      }
+      vyslednyRozvrh = await generateScheduleFromNearestSunday(
+          sluzba: sluzba,
+          sluzobnici: selectedSluzobniciList,
+          selectedDate: selectedDate,
+          kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+          skipDate: picked);
+      setState(() {});
     }
   }
 }
