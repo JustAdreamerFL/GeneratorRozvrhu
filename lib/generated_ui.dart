@@ -1,6 +1,3 @@
-// TODO: ak v current mesiaci nie je už ďaľšia nedela, skipni ten mesiac ale nech to vygeneruje stále korektný počet zvolených mesiacov
-//TODO: jednotlive chips pre meno sluzobnika, a dva tlacidla pre oznacenie kazdeho a odoznacenie kazdeho, schovane v modal sheet
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -23,11 +20,9 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   DateTime? selectedSkipDate;
   bool isSelectedSkip = false;
   bool isSelectedDate = false;
-  List<String> defaultSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  final List<String> defaultSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
   List<String> selectedSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
-  List<String> emptyRozvrh = ["Pridaj dakoho, inak bude zle."];
-
-  String defaultSluzba = "Služba mužské WC";
+  final String defaultSluzba = "Služba mužské WC";
   String sluzba = "Služba mužské WC";
   int kolkomesiacovgenerovat = 3;
   List<String> vyslednyRozvrh = [];
@@ -125,19 +120,13 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                 if (selectedSluzobniciList.contains(meno)) {
                   selectedSluzobniciList.remove(meno);
                   setState(() {});
-                  if (selectedSluzobniciList.isEmpty) {
-                    selectedSluzobniciList = ["empty"];
-                    vyslednyRozvrh = emptyRozvrh;
-                    selectedSluzobniciList = [];
-                    setState(() {});
-                  } else {
-                    vyslednyRozvrh = await generateScheduleFromNearestSunday(
-                        sluzba: sluzba,
-                        sluzobnici: selectedSluzobniciList,
-                        selectedDate: selectedDate,
-                        kolkomesiacovgenerovat: kolkomesiacovgenerovat);
-                    setState(() {});
-                  }
+
+                  vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                      sluzba: sluzba,
+                      sluzobnici: selectedSluzobniciList,
+                      selectedDate: selectedDate,
+                      kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+                  setState(() {});
                 } else {
                   selectedSluzobniciList.add(meno);
                   vyslednyRozvrh = await generateScheduleFromNearestSunday(
@@ -152,7 +141,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             )))
         .values
         .toList();
-
+    bool showSelectAll = !(selectedSluzobniciList.length == defaultSluzobniciList.length);
+    bool showDeSelectAll = (selectedSluzobniciList.length == defaultSluzobniciList.length);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       child: Column(
@@ -171,26 +161,32 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 8,
                     children: [
-                      ActionChip(
-                        label: Text("Odznač všetkých"),
-                        onPressed: () async {
-                          selectedSluzobniciList = [];
-                          vyslednyRozvrh = emptyRozvrh;
-                          setState(() {});
-                        },
-                      ),
-                      ActionChip(
-                        label: Text("Označ všetkých"),
-                        onPressed: () async {
-                          selectedSluzobniciList = [...defaultSluzobniciList];
-                          vyslednyRozvrh = await generateScheduleFromNearestSunday(
-                              sluzba: sluzba,
-                              sluzobnici: selectedSluzobniciList,
-                              kolkomesiacovgenerovat: kolkomesiacovgenerovat,
-                              selectedDate: selectedDate);
-                          setState(() {});
-                        },
-                      ),
+                      if (showDeSelectAll)
+                        ActionChip(
+                          label: Text("❌ všetkých"),
+                          onPressed: () async {
+                            selectedSluzobniciList = [];
+                            vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                                sluzba: sluzba,
+                                sluzobnici: selectedSluzobniciList,
+                                kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                                selectedDate: selectedDate);
+                            setState(() {});
+                          },
+                        ),
+                      if (showSelectAll)
+                        ActionChip(
+                          label: Text("✔️ všetkých"),
+                          onPressed: () async {
+                            selectedSluzobniciList = [...defaultSluzobniciList];
+                            vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                                sluzba: sluzba,
+                                sluzobnici: selectedSluzobniciList,
+                                kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                                selectedDate: selectedDate);
+                            setState(() {});
+                          },
+                        ),
                     ],
                   ),
                   // Column(
@@ -240,14 +236,14 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                 return AnimationConfiguration.staggeredList(
                   duration: const Duration(
                     microseconds: 160000,
-                  ), //TODO: make editable via slider in some settings
+                  ),
                   position: index,
                   child: SlideAnimation(
                     verticalOffset: 5,
                     child: ScaleAnimation(
                       duration: const Duration(
                         microseconds: 80000,
-                      ), //TODO: half the variable
+                      ),
                       scale: 0.8,
                       child: FadeInAnimation(
                         child: Stack(
@@ -301,20 +297,18 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             max: 5,
             divisions: 4,
             label: '$kolkomesiacovgenerovat',
-            onChanged: (double newValue) async {
-              kolkomesiacovgenerovat = newValue.toInt();
-              if (selectedSluzobniciList.isEmpty) {
-                vyslednyRozvrh = emptyRozvrh;
-              } else {
-                vyslednyRozvrh = await generateScheduleFromNearestSunday(
-                    sluzba: sluzba,
-                    sluzobnici: selectedSluzobniciList,
-                    selectedDate: selectedDate,
-                    kolkomesiacovgenerovat: kolkomesiacovgenerovat,
-                    skipDate: selectedSkipDate);
-              }
-              setState(() {});
-            },
+            onChanged: selectedSluzobniciList.isEmpty
+                ? null
+                : (double newValue) async {
+                    kolkomesiacovgenerovat = newValue.toInt();
+                    vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                        sluzba: sluzba,
+                        sluzobnici: selectedSluzobniciList,
+                        selectedDate: selectedDate,
+                        kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                        skipDate: selectedSkipDate);
+                    setState(() {});
+                  },
           ),
         ],
       ),

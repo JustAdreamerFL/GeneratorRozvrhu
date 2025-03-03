@@ -3,12 +3,15 @@ import 'package:intl/intl.dart';
 
 Future<List<String>> generateScheduleFromNearestSunday({
   required String sluzba,
-  required dynamic sluzobnici,
+  required List<String> sluzobnici,
   required int kolkomesiacovgenerovat,
   required DateTime selectedDate,
   DateTime? skipDate,
   String? skipString,
 }) async {
+  if (sluzobnici.isEmpty) {
+    return ["Pridaj dakoho, inak bude zle."];
+  }
   skipString ??= '🚨--< skip >--🚨';
   DateTime referenceDate = DateTime.now();
   DateTime generatorDate = selectedDate;
