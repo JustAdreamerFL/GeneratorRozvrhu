@@ -1,16 +1,7 @@
-# rozvrh_generator
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Generator rozvrhu pre týždňové zborové služby
+Je dostupný na tejto adrese: [https://church-hq.web.app/]
+a poskytuje tieto funkcie:
+- Generovať rozvrh až pre 5 mesiacov dopredu od súčasného dátumu alebo vybraného dátumu niekedy v budúcnu
+- Preskočenie vybraného týždňa
+- Custom názov služby a custom mená služobníkov
+- Nice UI, dúfam
