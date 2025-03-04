@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'generator_function.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UIGeneratorRozvrhu extends StatefulWidget {
   const UIGeneratorRozvrhu({super.key});
@@ -11,8 +12,9 @@ class UIGeneratorRozvrhu extends StatefulWidget {
 }
 
 class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
+  final db = FirebaseFirestore.instance;
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
-  // final TextEditingController _sluzobniciTcontroller = TextEditingController();
+  final TextEditingController _sluzobniciTcontroller = TextEditingController();
   final List<TextEditingController> _controllers = [];
   final ScrollController _randomScrollController = ScrollController();
   final DateTime currentDate = DateTime.now();
@@ -20,9 +22,10 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   DateTime? selectedSkipDate;
   bool isSelectedSkip = false;
   bool isSelectedDate = false;
-  final List<String> defaultSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
-  List<String> selectedSluzobniciList = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
-  final String defaultSluzba = "Služba mužské WC";
+  static final List<String> defaultSluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  List<String> selectedSluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  List<String> tempSluzobnici = ["Rado", "Mišo", "Timo", "Aďo", "Šimon"];
+  static final String defaultSluzba = "Služba mužské WC";
   String sluzba = "Služba mužské WC";
   int kolkomesiacovgenerovat = 3;
   List<String> vyslednyRozvrh = [];
@@ -30,14 +33,21 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   @override
   void initState() {
     _initializeSchedule();
-    // selectedSluzobniciList = defaultSluzobniciList;
+    _sluzobniciTcontroller.addListener(_updateTextFieldState);
+
     super.initState();
+  }
+
+  void _updateTextFieldState() {
+    setState(() {
+      // This empty setState will rebuild the UI when text changes
+    });
   }
 
   _initializeSchedule() async {
     vyslednyRozvrh = await generateScheduleFromNearestSunday(
         sluzba: sluzba,
-        sluzobnici: selectedSluzobniciList,
+        sluzobnici: selectedSluzobnici,
         kolkomesiacovgenerovat: kolkomesiacovgenerovat,
         selectedDate: selectedDate);
 
@@ -77,7 +87,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     nazov_textfield(),
-                    // sluzobnici_textfield(),
+                    sluzobnici_textfield(),
+                    // debug_text(),
                     const SizedBox(height: 10),
                     sluzobnici_chipfield(),
                     mesiace_slider(),
@@ -93,45 +104,45 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     );
   }
 
-  // sluzobnici_chipfield() {
-  //   var itemCount = 20;
-  //   return Padding(
-  //     padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-  //     child: WrapBuilder(
-  //         wrapAlignment: WrapAlignment.center,
-  //         runAlignment: WrapAlignment.center,
-  //         itemBuilder: (BuildContext context, ) {
-  //           // return Chip(label: Text("data"));
-  //           return Chip(label: Text("{$sluzobnicic}"));
-  //         },
-  //         itemCount: itemCount,
-  //         reversed: false),
-  //   );
-  // }
+  debug_text() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("default ${defaultSluzobnici.toString()}"),
+          Text("selected ${selectedSluzobnici.toString()}"),
+        ],
+      ),
+    );
+  }
+
   sluzobnici_chipfield() {
-    List<Widget> sluzobniciChipWidgetsList = defaultSluzobniciList
+    // if ((const ListEquality().equals(selectedSluzobnici, defaultSluzobnici))) {
+
+    List<Widget> sluzobniciChipWidgetsList = tempSluzobnici
         .asMap()
         .map((index, meno) => MapEntry(
             index,
             InputChip(
               isEnabled: true,
-              selected: selectedSluzobniciList.contains(meno),
+              selected: selectedSluzobnici.contains(meno),
               onSelected: (_) async {
-                if (selectedSluzobniciList.contains(meno)) {
-                  selectedSluzobniciList.remove(meno);
+                if (selectedSluzobnici.contains(meno)) {
+                  selectedSluzobnici.remove(meno);
                   setState(() {});
 
                   vyslednyRozvrh = await generateScheduleFromNearestSunday(
                       sluzba: sluzba,
-                      sluzobnici: selectedSluzobniciList,
+                      sluzobnici: selectedSluzobnici,
                       selectedDate: selectedDate,
                       kolkomesiacovgenerovat: kolkomesiacovgenerovat);
                   setState(() {});
                 } else {
-                  selectedSluzobniciList.add(meno);
+                  selectedSluzobnici.add(meno);
                   vyslednyRozvrh = await generateScheduleFromNearestSunday(
                       sluzba: sluzba,
-                      sluzobnici: selectedSluzobniciList,
+                      sluzobnici: selectedSluzobnici,
                       selectedDate: selectedDate,
                       kolkomesiacovgenerovat: kolkomesiacovgenerovat);
                   setState(() {});
@@ -141,8 +152,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             )))
         .values
         .toList();
-    bool showSelectAll = !(selectedSluzobniciList.length == defaultSluzobniciList.length);
-    bool showDeSelectAll = (selectedSluzobniciList.length == defaultSluzobniciList.length);
+    bool showSelectAll = !(selectedSluzobnici.length == tempSluzobnici.length);
+    bool showDeSelectAll = (selectedSluzobnici.length == tempSluzobnici.length);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       child: Column(
@@ -165,10 +176,10 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                         ActionChip(
                           label: Text("❌ všetkých"),
                           onPressed: () async {
-                            selectedSluzobniciList = [];
+                            selectedSluzobnici = [];
                             vyslednyRozvrh = await generateScheduleFromNearestSunday(
                                 sluzba: sluzba,
-                                sluzobnici: selectedSluzobniciList,
+                                sluzobnici: selectedSluzobnici,
                                 kolkomesiacovgenerovat: kolkomesiacovgenerovat,
                                 selectedDate: selectedDate);
                             setState(() {});
@@ -176,12 +187,12 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                         ),
                       if (showSelectAll)
                         ActionChip(
-                          label: Text("✔️ všetkých"),
+                          label: Text("✅ všetkých"),
                           onPressed: () async {
-                            selectedSluzobniciList = [...defaultSluzobniciList];
+                            selectedSluzobnici = [...tempSluzobnici];
                             vyslednyRozvrh = await generateScheduleFromNearestSunday(
                                 sluzba: sluzba,
-                                sluzobnici: selectedSluzobniciList,
+                                sluzobnici: selectedSluzobnici,
                                 kolkomesiacovgenerovat: kolkomesiacovgenerovat,
                                 selectedDate: selectedDate);
                             setState(() {});
@@ -189,22 +200,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
                         ),
                     ],
                   ),
-                  // Column(
-                  //   children: [
-                  //     Text("selected"),
-                  //     Row(
-                  //       children: selectedSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
-                  //     ),
-                  //   ],
-                  // ),
-                  // Column(
-                  //   children: [
-                  //     Text("default"),
-                  //     Row(
-                  //       children: defaultSluzobniciList.map((sluzobnik) => Text(sluzobnik)).toList(),
-                  //     ),
-                  //   ],
-                  // ),
                 ],
               ),
             ),
@@ -212,14 +207,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
         ],
       ),
     );
-    // return Padding(
-    //   padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-    //   child: Wrap(
-    //     alignment: WrapAlignment.center,
-    //     runAlignment: WrapAlignment.center,
-    //     children: sluzobniciChipWidgetsList,
-    //   ),
-    // );
   }
 
   SizedBox generated_text(BuildContext context) {
@@ -297,13 +284,13 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
             max: 5,
             divisions: 4,
             label: '$kolkomesiacovgenerovat',
-            onChanged: selectedSluzobniciList.isEmpty
+            onChanged: selectedSluzobnici.isEmpty
                 ? null
                 : (double newValue) async {
                     kolkomesiacovgenerovat = newValue.toInt();
                     vyslednyRozvrh = await generateScheduleFromNearestSunday(
                         sluzba: sluzba,
-                        sluzobnici: selectedSluzobniciList,
+                        sluzobnici: selectedSluzobnici,
                         selectedDate: selectedDate,
                         kolkomesiacovgenerovat: kolkomesiacovgenerovat,
                         skipDate: selectedSkipDate);
@@ -315,50 +302,69 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     );
   }
 
-  // Stack sluzobnici_textfield() {
-  //   return Stack(
-  //     alignment: Alignment.bottomRight,
-  //     children: [
-  //       ConstrainedBox(
-  //         constraints: const BoxConstraints(maxWidth: 300),
-  //         child: TextFormField(
-  //           controller: _sluzobniciTcontroller,
-  //           onChanged: (value) async {
-  //             if (value.isEmpty) {
-  //               vyslednyRozvrh = ["Pridaj dakoho, inak bude zle."];
+  Stack sluzobnici_textfield() {
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: TextFormField(
+            controller: _sluzobniciTcontroller,
+            onFieldSubmitted: (value) async {
+              if (value.isNotEmpty) {
+                tempSluzobnici.add(value);
+                selectedSluzobnici.add(value);
+                vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                    sluzba: sluzba,
+                    sluzobnici: selectedSluzobnici,
+                    kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                    selectedDate: selectedDate);
+                _sluzobniciTcontroller.clear();
+                setState(() {});
+              }
+            },
+            decoration: const InputDecoration(labelText: 'Služobníci'),
+          ),
+        ),
+        // if (ListEquality().equals(selectedSluzobnici, defaultSluzobnici))
+        IconButton(
+          onPressed: () async {
+            _sluzobniciTcontroller.clear();
+            selectedSluzobnici = [...defaultSluzobnici];
 
-  //               setState(() {});
-  //             } else {
-  //               selectedSluzobniciList = value.split(" ").map((e) => e.trim()).toList();
-  //               vyslednyRozvrh = await generateScheduleFromNearestSunday(
-  //                   sluzba: sluzba,
-  //                   sluzobnici: selectedSluzobniciList,
-  //                   selectedDate: selectedDate,
-  //                   kolkomesiacovgenerovat: kolkomesiacovgenerovat);
-  //               setState(() {});
-  //             }
-  //           },
-  //           decoration: const InputDecoration(labelText: 'Služobníci', hintText: " "),
-  //         ),
-  //       ),
-  //       if (selectedSluzobniciList != defaultSluzobniciList)
-  //         IconButton(
-  //           onPressed: () async {
-  //             _sluzobniciTcontroller.clear();
-  //             selectedSluzobniciList = defaultSluzobniciList;
-
-  //             vyslednyRozvrh = await generateScheduleFromNearestSunday(
-  //                 sluzba: sluzba,
-  //                 sluzobnici: selectedSluzobniciList,
-  //                 selectedDate: selectedDate,
-  //                 kolkomesiacovgenerovat: kolkomesiacovgenerovat);
-  //             setState(() {});
-  //           },
-  //           icon: const Icon(Icons.refresh_outlined),
-  //         ),
-  //     ],
-  //   );
-  // }
+            vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                sluzba: sluzba,
+                sluzobnici: selectedSluzobnici,
+                selectedDate: selectedDate,
+                kolkomesiacovgenerovat: kolkomesiacovgenerovat);
+            setState(() {});
+          },
+          icon: const Icon(Icons.refresh_outlined),
+        ),
+        if (_sluzobniciTcontroller.text.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(right: 40),
+            child: IconButton(
+              onPressed: () async {
+                final value = _sluzobniciTcontroller.text;
+                if (value.isNotEmpty) {
+                  tempSluzobnici.add(value);
+                  selectedSluzobnici.add(value);
+                  vyslednyRozvrh = await generateScheduleFromNearestSunday(
+                      sluzba: sluzba,
+                      sluzobnici: selectedSluzobnici,
+                      kolkomesiacovgenerovat: kolkomesiacovgenerovat,
+                      selectedDate: selectedDate);
+                  _sluzobniciTcontroller.clear();
+                  setState(() {});
+                }
+              },
+              icon: const Icon(Icons.check),
+            ),
+          ),
+      ],
+    );
+  }
 
   Stack nazov_textfield() {
     return Stack(
@@ -374,7 +380,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
                 vyslednyRozvrh = await generateScheduleFromNearestSunday(
                     sluzba: sluzba,
-                    sluzobnici: selectedSluzobniciList,
+                    sluzobnici: selectedSluzobnici,
                     selectedDate: selectedDate,
                     kolkomesiacovgenerovat: kolkomesiacovgenerovat);
                 setState(() {});
@@ -388,7 +394,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
               vyslednyRozvrh = await generateScheduleFromNearestSunday(
                   sluzba: sluzba,
-                  sluzobnici: selectedSluzobniciList,
+                  sluzobnici: selectedSluzobnici,
                   selectedDate: selectedDate,
                   kolkomesiacovgenerovat: kolkomesiacovgenerovat);
               setState(() {});
@@ -422,7 +428,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
                   vyslednyRozvrh = await generateScheduleFromNearestSunday(
                       sluzba: sluzba,
-                      sluzobnici: selectedSluzobniciList,
+                      sluzobnici: selectedSluzobnici,
                       selectedDate: selectedDate,
                       kolkomesiacovgenerovat: kolkomesiacovgenerovat);
                   setState(() {});
@@ -464,7 +470,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
                   vyslednyRozvrh = await generateScheduleFromNearestSunday(
                       sluzba: sluzba,
-                      sluzobnici: selectedSluzobniciList,
+                      sluzobnici: selectedSluzobnici,
                       selectedDate: selectedDate,
                       kolkomesiacovgenerovat: kolkomesiacovgenerovat);
                   setState(() {});
@@ -495,7 +501,6 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   Future<void> selectDateDialog(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-
       currentDate: selectedDate,
       firstDate: currentDate,
       lastDate: currentDate.add(const Duration(days: 365 * 10)),
@@ -509,7 +514,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
       vyslednyRozvrh = await generateScheduleFromNearestSunday(
           sluzba: sluzba,
-          sluzobnici: selectedSluzobniciList,
+          sluzobnici: selectedSluzobnici,
           selectedDate: selectedDate,
           kolkomesiacovgenerovat: kolkomesiacovgenerovat,
           skipDate: selectedSkipDate);
@@ -539,11 +544,23 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
       }
       vyslednyRozvrh = await generateScheduleFromNearestSunday(
           sluzba: sluzba,
-          sluzobnici: selectedSluzobniciList,
+          sluzobnici: selectedSluzobnici,
           selectedDate: selectedDate,
           kolkomesiacovgenerovat: kolkomesiacovgenerovat,
           skipDate: picked);
       setState(() {});
     }
+  }
+
+  @override
+  void dispose() {
+    _sluzobniciTcontroller.removeListener(_updateTextFieldState);
+    _sluzobniciTcontroller.dispose();
+    _nazovSluzbyTcontroller.dispose();
+    for (TextEditingController controller in _controllers) {
+      controller.dispose();
+    }
+    _randomScrollController.dispose();
+    super.dispose();
   }
 }
