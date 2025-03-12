@@ -2,9 +2,8 @@ name: Deploy to Firebase Hosting on commit to main branch
 on:
   push:
     branches:
-      - main
+      - release
     paths-ignore:
-      - 'README.md'
       - '*.md'
       - 'docs/**'
       - 'LICENSE'
