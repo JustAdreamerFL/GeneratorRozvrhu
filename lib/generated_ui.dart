@@ -16,7 +16,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
   final TextEditingController _nazovSluzbyTcontroller = TextEditingController();
   final TextEditingController _sluzobniciTcontroller = TextEditingController();
   final List<TextEditingController> _controllers = [];
-  final ScrollController _randomScrollController = ScrollController();
+  final ScrollController _mainScrollController = ScrollController();
+  final ScrollController _generatedTextScrollController = ScrollController();
   final DateTime currentDate = DateTime.now();
   DateTime selectedDate = DateTime.now();
   DateTime? selectedSkipDate;
@@ -40,7 +41,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
   void _updateTextFieldState() {
     setState(() {
-      // This empty setState will rebuild the UI when text changes
+      // to show the add sluzobnik icon, i need to have this because setState will rebuild the UI when text changed
     });
   }
 
@@ -66,7 +67,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
         child: dateRows(theme, colorScheme, context),
       ),
       body: CustomScrollView(
-        controller: _randomScrollController,
+        controller: _mainScrollController,
         slivers: [
           SliverAppBar(
             pinned: false,
@@ -213,7 +214,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     return SizedBox(
       height: MediaQuery.of(context).size.height,
       child: CustomScrollView(
-        controller: _randomScrollController,
+        controller: _generatedTextScrollController,
         slivers: [
           SliverList(
             delegate: SliverChildBuilderDelegate(
@@ -560,7 +561,8 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
     for (TextEditingController controller in _controllers) {
       controller.dispose();
     }
-    _randomScrollController.dispose();
+    _mainScrollController.dispose();
+    _generatedTextScrollController.dispose();
     super.dispose();
   }
 }
