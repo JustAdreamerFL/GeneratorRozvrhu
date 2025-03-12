@@ -41,7 +41,7 @@ class _UIGeneratorRozvrhuState extends State<UIGeneratorRozvrhu> {
 
   void _updateTextFieldState() {
     setState(() {
-      // This empty setState will rebuild the UI when text changes
+      // to show the add sluzobnik icon, i need to have this because setState will rebuild the UI when text changed
     });
   }
 
